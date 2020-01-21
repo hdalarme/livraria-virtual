@@ -12,6 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -32,13 +33,26 @@ public class LivroResource {
 	
 	@GET
 	@Path("/{isbn}")
-	public Livro getLivroPorIsbn(@PathParam("isbn") String isbn) {
+	public ItemBusca getLivroPorIsbn(@PathParam("isbn") String isbn) {
 		try {
-			return livroRepo.getLivroPorIsbn(isbn);
+			Livro livro = livroRepo.getLivroPorIsbn(isbn);
+			
+			ItemBusca item = new ItemBusca();
+			item.setLivro(livro);
+			
+			Link link = Link.fromUri("/carrinho/" + livro.getId())
+					.rel("carrinho")
+					.type("POST").build();
+			
+			item.addLink(link);
+			
+			return item;
+			
 		} catch(LivroNaoEncontradoException e) {
 			throw new WebApplicationException(Status.NOT_FOUND);
 		}
 	}
+	
 	@POST
 	@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public Response criaLivro(Livro livro) {
